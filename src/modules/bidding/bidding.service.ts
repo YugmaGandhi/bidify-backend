@@ -1,5 +1,6 @@
 import { prisma } from "../../config/db";
 import { Prisma } from "@prisma/client";
+import { getIO } from "../../socket";
 
 interface PlaceBidInput {
     auctionId: string;
@@ -50,17 +51,28 @@ export const placeBid = async (input: PlaceBidInput) => {
                 amount: new Prisma.Decimal(amount),
                 userId: userId,
                 auctionId: auctionId
+            },
+            include: {
+                user: { select: { name: true }}
             }
         });
 
         await tx.auction.update({
             where: { id: auctionId },
-            data: {
-                currentPrice: new Prisma.Decimal(amount)
-            }
+            data: { currentPrice: new Prisma.Decimal(amount) }
         });
 
         return newBid;
+    });
+
+    // REAL-TIME BROADCAST
+    // We emit to the specific room: "auction_{id}"
+    const io = getIO();
+    io.to(input.auctionId).emit('bid_update', {
+        auctionId: input.auctionId,
+        amount: input.amount,
+        bidderName: result.user.name,
+        timeStamp: new Date()
     });
 
     return result;
