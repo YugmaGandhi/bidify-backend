@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+  output = "../node_modules/.prisma/client" // Ensures the client is generated in the correct location
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid()) // UUID is better for security than auto-increment ID
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  auctions  Auction[] @relation("SellerAuctions")
+  bids      Bid[]
+  
+  @@map("users") // Maps model 'User' to table 'users' in DB (Standard naming convention)
+}
+
+model Auction {
+  id            String   @id @default(uuid())
+  title         String
+  description   String
+  startingPrice Decimal  // Uses Decimal for precision
+  currentPrice  Decimal  @default(0) 
+  startTime     DateTime
+  endTime       DateTime
+  
+  // Relations
+  sellerId      String
+  seller        User     @relation("SellerAuctions", fields: [sellerId], references: [id])
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  bids Bid[]
+
+  @@map("auctions")
+}
+
+model Bid {
+  id        String   @id @default(uuid())
+  amount    Decimal
+  
+  // Relations
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  auctionId String
+  auction   Auction  @relation(fields: [auctionId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@map("bids")
+}

@@ -1,0 +1,25 @@
+// tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "strict": true,               /* Enable all strict type-checking options */
+    "esModuleInterop": true,      /* Enables emit interoperability between CommonJS and ES Modules */
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    // we need to add this to make types work from custom types folder
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"],
+  // add this else ts-node will ignore our type that we added in express type
+  "ts-node": {
+    "files": true
+  }
+}
