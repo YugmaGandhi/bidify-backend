@@ -33,5 +33,13 @@ services:
       - '6379:6379'
     restart: always
 
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: bidify_mq
+    ports:
+      - "5672:5672"   # For our Node app
+      - "15672:15672" # For the Browser UI
+    restart: always
+
 volumes:
   postgres_data:
