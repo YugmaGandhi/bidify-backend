@@ -2,6 +2,7 @@ import redis from "../../config/redis";
 import { prisma } from "../../config/db";
 import { Prisma } from "@prisma/client";
 import { getIO } from "../../socket";
+import { publishToQueue } from "../../config/rabbitmq";
 
 interface PlaceBidInput {
     auctionId: string;
@@ -69,7 +70,7 @@ export const placeBid = async (input: PlaceBidInput) => {
                 auctionId: auctionId
             },
             include: {
-                user: { select: { name: true } }
+                user: { select: { name: true, email: true } }
             }
         });
 
@@ -95,5 +96,16 @@ export const placeBid = async (input: PlaceBidInput) => {
         timestamp: new Date()
     });
 
+    // Fire and Forget: Send email task to queue
+    // We do NOT await this if we want to be superfast
+    // but usually aw await the *publish* (which is fast), not the *sending*
+    await publishToQueue({
+        type: 'BIT_PLACED',
+        payload: {
+            email: result.user.email,
+            amout: result.amount,
+            auctionTitle: "Fetch from DB if needed",
+        }
+    })
     return result;
 };

@@ -5,11 +5,19 @@ import http from 'http';
 import app from './app';
 import { prisma } from './config/db';
 import { initSocket } from './socket';
+import { connectRabbitMQ, consumeQueue } from './config/rabbitmq';
 
 const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
     try{
+
+        // Connect to RabbitMQ
+        await connectRabbitMQ();
+
+        // Initialize consumer for RabbitMQ
+        consumeQueue();
+
         // Create the Raw HTTP server using Express
         const server = http.createServer(app);
 
