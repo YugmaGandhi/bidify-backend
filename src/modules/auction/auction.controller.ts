@@ -8,6 +8,7 @@ const createAuctionSchema = z.object({
     startingPrice: z.number().positive(),
     startTime: z.iso.datetime(),
     endTime: z.iso.datetime(),
+    imageUrl: z.url()
 }).refine((data) => {
     const start = new Date(data.startTime);
     const end = new Date(data.endTime);
