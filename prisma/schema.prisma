@@ -29,6 +29,8 @@ model Auction {
   currentPrice  Decimal  @default(0) 
   startTime     DateTime
   endTime       DateTime
+
+  imageUrl      String? // Optional field for auction image
   
   // Relations
   sellerId      String

@@ -8,6 +8,7 @@ interface CreateAuctionInput {
     startTime: string;
     endTime: string;
     sellerId: string;
+    imageUrl: string;
 }
 
 export const createAuction = async (input: CreateAuctionInput) => {
@@ -19,7 +20,8 @@ export const createAuction = async (input: CreateAuctionInput) => {
             currentPrice: new Prisma.Decimal(input.startingPrice),  // Current price starts at start price
             startTime: new Date(input.startTime),
             endTime: new Date(input.endTime),
-            sellerId: input.sellerId
+            sellerId: input.sellerId,
+            imageUrl: input.imageUrl
         }
     });
 }
