@@ -6,6 +6,8 @@ import auctionRoutes from './modules/auction/auction.routes';
 import biddingRoutes from './modules/bidding/bidding.routes';
 import paymentRoutes from './modules/payment/payment.routes';
 import uploadRoutes from './modules/upload/upload.routes';
+import { AppError } from './common/utils/AppError';
+import { globalErrorHandler } from './common/middleware/error.middleware';
 
 const app: Application = express();
 
@@ -41,5 +43,13 @@ app.use('/api/v1/auctions', auctionRoutes);
 app.use('/api/v1/bids', biddingRoutes);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/upload', uploadRoutes);
+
+// 404 Handler ( If route not found)
+app.all('/{*any}', (req, res, next) => {
+    next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+});
+
+// Global Error Handling Middleware
+app.use(globalErrorHandler);
 
 export default app;
