@@ -6,3 +6,4 @@ node_modules
 /src/prisma/migrations/*
 
 /uploads
+/logs
