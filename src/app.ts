@@ -11,6 +11,8 @@ import uploadRoutes from './modules/upload/upload.routes';
 import { AppError } from './common/utils/AppError';
 import { globalErrorHandler } from './common/middleware/error.middleware';
 import { apiLimiter } from './config/rateLimiter';
+import { metricsMiddleware } from './common/middleware/metrics.middleware';
+import { register } from './config/metrics';
 
 const app: Application = express();
 
@@ -23,6 +25,16 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev', { str
 // Global Middlewares
 app.use(helmet()); // Security headers
 app.use(cors()); // Enable CORS
+
+
+//Metrics Middleware (Start tracking)
+app.use(metricsMiddleware);
+
+//Metrics Endpoint
+app.get('/metrics', async (req, res) => {
+    res.setHeader('Content-Type', register.contentType);
+    res.send(await register.metrics());
+});
 
 // --- CRITICAL CHANGE START ---
 

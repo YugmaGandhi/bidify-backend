@@ -41,5 +41,27 @@ services:
       - "15672:15672" # For the Browser UI
     restart: always
 
+  # Prometheus (The Collector)
+  prometheus:
+    image: prom/prometheus
+    container_name: bidify_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+
+  # Grafana (The Dashboard)
+  grafana:
+    image: grafana/grafana
+    container_name: bidify_grafana
+    ports:
+      - "3001:3000" # Maps Grafana's 3000 to our 3001
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+
 volumes:
   postgres_data:
