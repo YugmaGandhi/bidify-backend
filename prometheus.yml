@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 5s # Scrape every 5 seconds (Fast for testing)
+
+scrape_configs:
+  - job_name: 'bidify-backend'
+    static_configs:
+      # HOST: Since we are in Docker, we use 'host.docker.internal' to talk to your Node app running on localhost:3000
+      # If Node is ALSO in Docker, use the service name 'app' or whatever you named it.
+      # Assuming Node is running LOCALLY (npm run dev) and Prometheus is in DOCKER:
+      - targets: ['host.docker.internal:3000']
