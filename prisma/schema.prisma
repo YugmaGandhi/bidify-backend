@@ -45,6 +45,12 @@ model User {
   @@map("users") // Maps model 'User' to table 'users' in DB (Standard naming convention)
 }
 
+enum AuctionStatus {
+  ACTIVE
+  CLOSED // Time ended, no bids
+  SOLD   // Time ended, has winner
+}
+
 model Auction {
   id            String   @id @default(uuid())
   title         String
@@ -56,6 +62,8 @@ model Auction {
 
   imageUrl String? // Optional field for auction image
 
+  status AuctionStatus @default(ACTIVE)
+
   // Relations
   sellerId String
   seller   User   @relation("SellerAuctions", fields: [sellerId], references: [id])
@@ -65,6 +73,7 @@ model Auction {
 
   bids Bid[]
 
+  @@index([status, endTime])
   @@map("auctions")
 }
 
