@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
-import { createAuction, getAuctions } from "./auction.service";
+import { createAuction, deleteAuctionById, getAuctions } from "./auction.service";
 import { z } from "zod";
+import { catchAsync } from "../../common/utils/catchAsync";
+import { ApiResponse } from "../../common/utils/ApiResponse";
 
 const createAuctionSchema = z.object({
     title: z.string().min(3),
@@ -18,27 +20,36 @@ const createAuctionSchema = z.object({
     path: ["endTime"]
 });
 
-export const create = async ( req: Request, res: Response) => {
-    try {
-        // validate input
-        const data = createAuctionSchema.parse(req.body);
+export const create = catchAsync(async (req: Request, res: Response) => {
+    // validate input
+    const data = createAuctionSchema.parse(req.body);
 
-        const result = await createAuction({
-            ...data,
-            sellerId: req.user!.userId // req.user is guaranteed to exist due to auth middleware
-        });
+    const result = await createAuction({
+        ...data,
+        sellerId: req.user!.userId // req.user is guaranteed to exist due to auth middleware
+    });
 
-        res.status(201).json({ message: 'Auction created successfully', data: result });
-    } catch ( error: any) {
-        res.status(400).json({ message: error.message || 'Error creating auction', errors: error.errors});
-    }
-};
+    return ApiResponse.success(res, 'Auction created successfully', result, 201);
+});
 
-export const getAll = async ( req: Request, res: Response) => {
-    try {
-        const auctions = await getAuctions();
-        res.status(200).json({ data: auctions });
-    } catch (error: any) {
-        res.status(500).json({ message: 'Server error' });
-    }
-}
+export const getAll = catchAsync(async (req: Request, res: Response) => {
+    // Parse query parameters
+    const filters = {
+        search: req.query.search as string,
+        minPrice: req.query.minPrice ? Number(req.query.minPrice) : undefined,
+        maxPrice: req.query.maxPrice ? Number(req.query.maxPrice) : undefined,
+        page: req.query.page ? Number(req.query.page) : 1,
+        limit: req.query.limit ? Number(req.query.limit) : 10
+    };
+
+    const { items, meta } = await getAuctions(filters);
+    return ApiResponse.success(res, "Auction Fetched successfully", items, 200, meta);
+});
+
+
+export const deleteAuction = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    await deleteAuctionById(id);
+
+    return ApiResponse.success(res, 'Auction deleted successfully', null, 200);
+})

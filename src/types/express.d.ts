@@ -5,7 +5,9 @@ declare global {
         interface Request {
             user?: {
                 userId: string;
-                role: string;
+                role: string; //'ADMIN' or 'USER"
+                // we might attach permissions here via middleware later
+                permissions?: String[]
             }
         }
     }
