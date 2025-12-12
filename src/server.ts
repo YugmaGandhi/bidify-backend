@@ -6,6 +6,8 @@ import app from './app';
 import { prisma } from './config/db';
 import { initSocket } from './socket';
 import { connectRabbitMQ, consumeQueue } from './config/rabbitmq';
+import { initAuctionScheduler } from './modules/scheduler/auctionScheduler';
+import logger from './config/logger';
 
 const PORT = process.env.PORT || 3000;
 
@@ -32,6 +34,10 @@ const startServer = async () => {
         // app.listen(PORT, () => {
         //     console.log(`Server is running on port ${PORT}`);
         // });
+
+        // Start Background Jobs
+        initAuctionScheduler();
+        logger.info('Auction Scheduler started');
 
         server.listen(PORT, () => {
             console.log(`Server is running on port ${PORT}`);
