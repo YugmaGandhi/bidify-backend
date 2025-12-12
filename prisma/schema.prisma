@@ -1,10 +1,30 @@
 generator client {
   provider = "prisma-client-js"
-  output = "../node_modules/.prisma/client" // Ensures the client is generated in the correct location
+  output   = "../node_modules/.prisma/client" // Ensures the client is generated in the correct location
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model Permission {
+  id          String  @id @default(uuid())
+  action      String  @unique //e.g. "auction:create", "user:delete"
+  description String?
+
+  roles Role[] @relation("RolePermissions")
+
+  @@map("permissions")
+}
+
+model Role {
+  id   String @id @default(uuid())
+  name String @unique //'ADMIN', 'USER', "SUPPORT"
+
+  permissions Permission[] @relation("RolePermissions")
+  users       User[]
+
+  @@map("roles")
 }
 
 model User {
@@ -15,9 +35,13 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  auctions  Auction[] @relation("SellerAuctions")
-  bids      Bid[]
-  
+  //link to role
+  roleId String? //Optional during migration, strictly required later
+  role   Role?   @relation(fields: [roleId], references: [id])
+
+  auctions Auction[] @relation("SellerAuctions")
+  bids     Bid[]
+
   @@map("users") // Maps model 'User' to table 'users' in DB (Standard naming convention)
 }
 
@@ -25,19 +49,19 @@ model Auction {
   id            String   @id @default(uuid())
   title         String
   description   String
-  startingPrice Decimal  // Uses Decimal for precision
-  currentPrice  Decimal  @default(0) 
+  startingPrice Decimal // Uses Decimal for precision
+  currentPrice  Decimal  @default(0)
   startTime     DateTime
   endTime       DateTime
 
-  imageUrl      String? // Optional field for auction image
-  
-  // Relations
-  sellerId      String
-  seller        User     @relation("SellerAuctions", fields: [sellerId], references: [id])
+  imageUrl String? // Optional field for auction image
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  // Relations
+  sellerId String
+  seller   User   @relation("SellerAuctions", fields: [sellerId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   bids Bid[]
 
@@ -45,15 +69,15 @@ model Auction {
 }
 
 model Bid {
-  id        String   @id @default(uuid())
-  amount    Decimal
-  
+  id     String  @id @default(uuid())
+  amount Decimal
+
   // Relations
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
   auctionId String
-  auction   Auction  @relation(fields: [auctionId], references: [id])
+  auction   Auction @relation(fields: [auctionId], references: [id])
 
   createdAt DateTime @default(now())
 
