@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import { getProfile, login, register } from './auth.controller';
+import { getProfile, login, register, verifyEmail } from './auth.controller';
 import { authenticate } from '../../common/middleware/auth.middleware';
 import { authLimiter } from '../../config/rateLimiter';
 
 const router = Router();
 
+router.get('/verify-email', verifyEmail); //Public route
 // Apply strict limits specifically to these routes
 router.post('/register', authLimiter, register);
 router.post('/login', authLimiter, login);

@@ -39,6 +39,9 @@ model User {
   roleId String? //Optional during migration, strictly required later
   role   Role?   @relation(fields: [roleId], references: [id])
 
+  isVerified        Boolean @default(false)
+  verificationToken String? // Stores the random hash
+
   auctions Auction[] @relation("SellerAuctions")
   bids     Bid[]
 
@@ -48,7 +51,7 @@ model User {
 enum AuctionStatus {
   ACTIVE
   CLOSED // Time ended, no bids
-  SOLD   // Time ended, has winner
+  SOLD // Time ended, has winner
 }
 
 model Auction {
