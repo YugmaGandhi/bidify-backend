@@ -3,6 +3,7 @@ import { loginUser, registerUser } from './auth.service';
 import { z } from 'zod';
 import { catchAsync } from '../../common/utils/catchAsync';
 import { ApiResponse } from '../../common/utils/ApiResponse';
+import { verifyUserEmail } from './auth.service';
 
 // Zod schema for Validation
 const registerSchema = z.object({
@@ -47,3 +48,17 @@ export const getProfile = async ( req: Request, res: Response) => {
         user: req.user
     });
 }
+
+export const verifyEmail = catchAsync( async (req: Request, res: Response) => {
+    const{ token } = req.query;
+
+    if (!token || typeof token !== 'string') {
+        return ApiResponse.error(res, 'Invalid token', 400);
+    }
+
+    await verifyUserEmail(token);
+
+    // In a real app, you would redirect to the Frontend Login page here
+    // res.redirect('http://localhost:3001/login?verified=true');
+    return ApiResponse.success(res, 'Email verified successfully', null, 200);
+})

@@ -1,6 +1,8 @@
 import { prisma } from '../../config/db';
+import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { sendEmail } from '../../common/utils/email';
 
 // Define the input type
 interface RegisterInput {
@@ -28,14 +30,29 @@ export const registerUser = async (input: RegisterInput) => {
     // 2. Hash password (10 rounds is standard)
     const hashedPassword = await bcrypt.hash(input.password, 10);
 
+    // 2.5 Generate random token
+    const generatedVerificationToken = crypto.randomBytes(32).toString('hex');
+
     // 3. Create User
     const user = await prisma.user.create({
         data: {
             email: input.email,
             name: input.name,
             password: hashedPassword,
+            verificationToken: generatedVerificationToken,
         },
     });
+
+    // In real frontend, this URL would be: https://your-frontend.com/verify?token=...
+    const verificationUrl = `http://localhost:3000/api/v1/auth/verify-email?token=${generatedVerificationToken}`;
+    
+    await sendEmail(
+        user.email, 
+        'Verify your Email', 
+        `<h1>Welcome to Bidify!</h1>
+         <p>Please click the link below to verify your account:</p>
+         <a href="${verificationUrl}">Verify Email</a>`
+    );
 
     // 4. Generate Token
     const token = jwt.sign(
@@ -45,8 +62,8 @@ export const registerUser = async (input: RegisterInput) => {
     );
 
     // 5. Return user (without password) and token
-    const { password, ...userWithoutPassword } = user;
-    return { user: userWithoutPassword, token };
+    const { password, verificationToken, ...userWithoutPasswordAndEmailToken } = user;
+    return { user: userWithoutPasswordAndEmailToken, token };
 };
 
 export const loginUser = async ( input: LoginInput) => {
@@ -77,3 +94,26 @@ export const loginUser = async ( input: LoginInput) => {
     const { password, ...userWithoutPassword } = user;
     return { user: userWithoutPassword, token };
 }
+
+// NEW FUNCTION: Handle the click
+export const verifyUserEmail = async (token: string) => {
+    // 1. Find user with this token
+    const user = await prisma.user.findFirst({
+        where: { verificationToken: token }
+    });
+
+    if (!user) {
+        throw new Error('Invalid or expired verification token');
+    }
+
+    // 2. Update User
+    await prisma.user.update({
+        where: { id: user.id },
+        data: {
+            isVerified: true,
+            verificationToken: null // Clear the token so it can't be used again
+        }
+    });
+
+    return true;
+};
